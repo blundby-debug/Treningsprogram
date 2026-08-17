@@ -21,8 +21,7 @@
   .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
   .day{display:flex;justify-content:space-between;align-items:center;background:var(--card2);
     border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:10px;cursor:pointer}
-  .day b{font-size:17px}
-  .day small{color:var(--mut);font-size:12px}
+  .day b{font-size:17px}.day small{color:var(--mut);font-size:12px}
   .btn{appearance:none;border:none;border-radius:12px;font-size:15px;font-weight:600;padding:13px;
     color:var(--txt);background:var(--card2);cursor:pointer;width:100%;text-align:center}
   .btn:active{transform:scale(.99)}
@@ -88,18 +87,16 @@
 <div class="toast" id="toast"></div>
 
 <script>
-/* Lagring: localStorage. Fase 1 / Fase 2 styres globalt. */
-
 const PROGRAMS = {
   torsoA:{name:"Torso A",ex:[
     {id:"a1",ord:"A",name:"Maskin eller kabel laterals",type:"ss + DC",sets:2,reps:"10–15",rest:90,note:"1 rett sett + 1 DC (rest-pause ×3)"},
-    {id:"a2",ord:"B",name:"Kabel flyes",type:"DC",sets:1,reps:"10–15",rest:90,note:"Rest-pause ×3 · Fase 2: Life cable"},
+    {id:"a2",ord:"B",name:"Kabel flyes",type:"ss",sets:2,reps:"10–15",rest:90,note:"Fase 2: Life cable"},
     {id:"a3",ord:"C",name:"Incline press",type:"ss",sets:2,reps:"8–12",rest:180,note:"Fase 2: Granite"},
     {id:"a4",ord:"D",name:"Flat press",type:"DC",sets:1,reps:"8–12",rest:180,note:"Rest-pause ×3 · Fase 2: Technogym"},
-    {id:"a5",ord:"E",name:"Lat pullover i maskin",type:"ss",sets:2,reps:"10–15",rest:90,note:"Lats"},
+    {id:"a5",ord:"E",name:"Lat pullover i maskin",type:"ss",sets:1,reps:"10–15",rest:90,note:"Lats"},
     {id:"a6",ord:"F",name:"Chest supported row",type:"ss",sets:2,reps:"8–12",rest:180,note:"Øvre rygg · Fase 2: Life fitness"},
     {id:"a7",ord:"G",name:"Single arm pulldown",type:"ss",sets:2,reps:"8–12",rest:180,note:"Lats"},
-    {id:"a8",ord:"H",name:"Bent over row",type:"DC",sets:1,reps:"8–12",rest:180,note:"Rest-pause ×3 · Øvre rygg + ryggstrekkere"},
+    {id:"a8",ord:"H",name:"Upper back flexion row",type:"DC",sets:1,reps:"8–12",rest:180,note:"Rest-pause ×3 · I KABEL · Øvre rygg + ryggstrekkere"},
   ]},
   limbsA:{name:"Limbs A",ex:[
     {id:"b0",ord:"ABS",name:"Planke",type:"ss",sets:2,reps:"60 sek",rest:90,fields:["sek"],note:"Trekk inn magen ALT du kan. Mål: dypere inntrekk + kontroll, ikke lengre tid."},
@@ -150,15 +147,11 @@ const sset=(k,v)=>{try{localStorage.setItem(PRE+k,JSON.stringify(v));return true
 
 const setCount=e=>(phase===2&&e.sets2)?e.sets2:e.sets;
 const exLog=(wk,id)=>sget(`log:${wk}:${id}`)||[];
-const lastEntry=(wk,id)=>{
-  const log=exLog(wk,id);
-  for(let i=log.length-1;i>=0;i--){if(log[i].date.slice(0,10)===today())continue;return log[i];}
-  return null;
-};
+const lastEntry=(wk,id)=>{const log=exLog(wk,id);
+  for(let i=log.length-1;i>=0;i--){if(log[i].date.slice(0,10)===today())continue;return log[i];}return null;};
 
 function render(){view==="home"?renderHome():view==="workout"?renderWorkout():renderHistory();}
 
-/* ---------- HOME ---------- */
 function renderHome(){
   phase=sget("phase")||1;
   $("#app").innerHTML=`
@@ -168,12 +161,10 @@ function renderHome(){
     <button class="${phase===1?"on":""}" onclick="setPhase(1)">Fase 1</button>
     <button class="${phase===2?"on":""}" onclick="setPhase(2)">Fase 2</button>
   </div>
-  ${ORDER.map(wk=>{
-    const p=PROGRAMS[wk], meta=sget(`meta:${wk}`);
+  ${ORDER.map(wk=>{const p=PROGRAMS[wk], meta=sget(`meta:${wk}`);
     return `<div class="day" onclick="openWorkout('${wk}')">
       <div><b>${p.name}</b><br><small>${p.ex.length} øvelser${meta?` · sist ${fmtDate(meta.last)}`:" · ikke logget"}</small></div>
-      <div style="color:var(--acc);font-size:22px">›</div></div>`;
-  }).join("")}
+      <div style="color:var(--acc);font-size:22px">›</div></div>`;}).join("")}
   <div class="card">
     <div style="font-weight:600;margin-bottom:10px">I dag · ${fmtDate(today())}</div>
     <div class="chips" id="daily"></div>
@@ -197,7 +188,6 @@ function renderDaily(){
 }
 function toggleDaily(id){const k="daily:"+today();const st=sget(k)||{};st[id]=!st[id];sset(k,st);renderDaily();}
 
-/* ---------- WORKOUT ---------- */
 function openWorkout(wk){
   current=wk;draft={};phase=sget("phase")||1;
   PROGRAMS[wk].ex.forEach(e=>{
@@ -207,9 +197,7 @@ function openWorkout(wk){
       draft[e.id]=lastL.sets.map(s=>({a:s.a,b:s.b,done:!!s.done}));
       while(draft[e.id].length<n)draft[e.id].push({a:"",b:"",done:false});
       draft[e.id]=draft[e.id].slice(0,Math.max(n,draft[e.id].length));
-    } else {
-      draft[e.id]=Array.from({length:n},()=>({a:"",b:"",done:false}));
-    }
+    } else draft[e.id]=Array.from({length:n},()=>({a:"",b:"",done:false}));
   });
   view="workout";render();window.scrollTo(0,0);
 }
@@ -276,29 +264,23 @@ function finishWorkout(){
   view="home";current=null;draft=null;stopTimer();render();
 }
 
-/* ---------- HISTORY ---------- */
 function renderHistory(){
   let html="";
-  for(const wk of ORDER){
-    const p=PROGRAMS[wk];let inner="";
-    for(const e of p.ex){
-      const log=exLog(wk,e.id);if(!log.length)continue;
+  for(const wk of ORDER){const p=PROGRAMS[wk];let inner="";
+    for(const e of p.ex){const log=exLog(wk,e.id);if(!log.length)continue;
       const f=e.fields||["kg","reps"];
       const rows=[...log].reverse().slice(0,12).map(en=>{
         const sets=en.sets.filter(s=>s.a||s.b).map(s=>f.length===1?`${s.a}s`:`${s.a}×${s.b}`).join("  ");
         const ph=en.phase?` <span style="color:var(--acc)">F${en.phase}</span>`:"";
         return `<div class="kvi"><span>${fmtDate(en.date)}${ph}</span><b>${sets||"—"}</b></div>`;
       }).join("");
-      inner+=`<div style="margin-top:10px"><div style="font-weight:600;font-size:14px">${e.name}</div>${rows}</div>`;
-    }
-    if(inner)html+=`<div class="card"><b>${p.name}</b>${inner}</div>`;
-  }
+      inner+=`<div style="margin-top:10px"><div style="font-weight:600;font-size:14px">${e.name}</div>${rows}</div>`;}
+    if(inner)html+=`<div class="card"><b>${p.name}</b>${inner}</div>`;}
   $("#app").innerHTML=`<button class="back" onclick="view='home';render()">‹ Tilbake</button>
   <h1>Historikk</h1><div class="sub">Per øvelse — nyeste først</div>
   ${html||`<div class="card small">Ingen logger ennå.</div>`}`;
 }
 
-/* ---------- EKSPORT / IMPORT ---------- */
 function allData(){const out={};for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);
   if(k.startsWith(PRE))out[k.slice(PRE.length)]=JSON.parse(localStorage.getItem(k));}return out;}
 function exportData(){
@@ -324,7 +306,6 @@ function doImport(){try{const o=JSON.parse($("#imp").value);const data=o.data||o
   Object.entries(data).forEach(([k,v])=>sset(k,v));closeModal();toast("Importert ✓");render();}
   catch{toast("Ugyldig JSON");}}
 
-/* ---------- INFO ---------- */
 function showInfo(){
   $("#sheet").innerHTML=`<h3>Intensitetsteknikker</h3><div class="small">Baseline 1–0 RIR</div>
   <div class="it"><b>Rest-pause:</b> Ved failure — pust 10 ganger (20–30 sek), så til failure igjen med samme vekt.</div>
@@ -338,7 +319,6 @@ function showInfo(){
 }
 function closeModal(){$("#modal").classList.remove("on");}
 
-/* ---------- toast & timer ---------- */
 let tt;function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(tt);tt=setTimeout(()=>t.classList.remove("on"),1600);}
 let timerSec=0,timerInt=null;
 function renderTimer(){
